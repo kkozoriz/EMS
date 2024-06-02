@@ -10,6 +10,7 @@ axum = "0.7.5"
 tokio = { version = "1.37.0", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1.0.203", features = ["derive"] }
 anyhow = "1.0.86"
-diesel = { version = "2.1.6", features = ["postgres"] }
+diesel = { version = "2.1.6", features = ["postgres", "chrono", "r2d2"] }
 dotenvy = "0.15.7"
 chrono = "0.4.38"
+axum-macros = "0.4.1"

@@ -1,35 +1,23 @@
-pub mod db;
+mod db;
+mod errors;
+mod handlers;
 mod routers;
 
-use crate::routers::show_users;
-use axum::http::StatusCode;
-use axum::response::{IntoResponse, Response};
-use axum::{routing::get, Router};
+use crate::db::get_connection_pool;
+use crate::routers::app_router;
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::PgConnection;
 
-struct AppError(anyhow::Error);
-
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Something went wrong: {}", self.0),
-        )
-            .into_response()
-    }
-}
-
-impl<E> From<E> for AppError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(err: E) -> Self {
-        Self(err.into())
-    }
+#[derive(Clone)]
+pub struct AppState {
+    pool: Pool<ConnectionManager<PgConnection>>,
 }
 
 #[tokio::main]
 async fn main() {
-    let app = Router::new().route("/api/users", get(show_users));
+    let pool = get_connection_pool();
+    let state = AppState { pool };
+    let app = app_router(state.clone()).with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();

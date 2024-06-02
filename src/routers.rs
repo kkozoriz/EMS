@@ -1,14 +1,10 @@
-use crate::AppError;
-use axum::Json;
-use serde::{Deserialize, Serialize};
+use crate::handlers::post_templates::post_templates;
+use crate::AppState;
+use axum::routing::post;
+use axum::Router;
 
-#[derive(Serialize, Deserialize)]
-pub struct Users {
-    pub name: String,
-    pub age: i32,
-}
-
-pub async fn show_users(Json(json): Json<Users>) -> Result<Json<Users>, AppError> {
-
-    Ok(Json(json))
+pub fn app_router(app_state: AppState) -> Router<AppState> {
+    Router::new()
+        .route("/", post(post_templates))
+        .with_state(app_state)
 }
