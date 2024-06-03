@@ -14,3 +14,4 @@ diesel = { version = "2.1.6", features = ["postgres", "chrono", "r2d2"] }
 dotenvy = "0.15.7"
 chrono = "0.4.38"
 axum-macros = "0.4.1"
+tracing = "0.1.40"

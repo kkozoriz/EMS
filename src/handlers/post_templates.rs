@@ -1,12 +1,13 @@
 use crate::db::db_models::NewNotificationTemplate;
 use crate::db::schema::notification_templates;
-use crate::errors::AppError;
 use crate::AppState;
 use axum::extract::State;
+use axum::response::{IntoResponse, Response};
 use axum_macros::FromRequest;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::{PgConnection, RunQueryDsl};
 use serde::Deserialize;
+use crate::errors::AppError;
 
 async fn save_new_template(
     pool: Pool<ConnectionManager<PgConnection>>,
@@ -41,6 +42,15 @@ pub async fn post_templates(
 #[derive(FromRequest)]
 #[from_request(via(axum::Json), rejection(AppError))]
 pub struct JsonExtractor<T>(pub T);
+
+impl<T> IntoResponse for JsonExtractor<T>
+    where
+        axum::Json<T>: IntoResponse,
+{
+    fn into_response(self) -> Response {
+        axum::Json(self.0).into_response()
+    }
+}
 
 #[derive(Deserialize)]
 pub struct CreateTemplate {
