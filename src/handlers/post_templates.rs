@@ -1,31 +1,28 @@
-use crate::db::db_models::NewNotificationTemplate;
+use crate::db::db_models::{NewNotificationTemplate, NotificationTemplate};
 use crate::db::schema::notification_templates;
 use crate::AppState;
 use axum::extract::State;
-use axum::response::{IntoResponse, Response};
-use axum_macros::FromRequest;
 use diesel::r2d2::{ConnectionManager, Pool};
-use diesel::{PgConnection, RunQueryDsl};
-use serde::Deserialize;
+use diesel::{PgConnection, RunQueryDsl, SelectableHelper};
 use crate::errors::AppError;
+use crate::handlers::{JsonExtractor, PostTemplate};
 
 async fn save_new_template(
     pool: Pool<ConnectionManager<PgConnection>>,
     new_template: NewNotificationTemplate,
-) -> Result<(), diesel::result::Error> {
+) -> Result<NotificationTemplate, diesel::result::Error> {
     let conn = &mut pool.get().unwrap();
 
-    diesel::insert_into(notification_templates::table)
+    Ok(diesel::insert_into(notification_templates::table)
         .values(&new_template)
-        .execute(conn)?;
-
-    Ok(())
+        .returning(NotificationTemplate::as_returning())
+        .get_result(conn)?)
 }
 
 pub async fn post_templates(
     State(state): State<AppState>,
-    JsonExtractor(new_template): JsonExtractor<CreateTemplate>,
-) -> Result<(), AppError> {
+    JsonExtractor(new_template): JsonExtractor<PostTemplate>,
+) -> Result<JsonExtractor<NotificationTemplate>, AppError> {
     let new_temp = NewNotificationTemplate {
         name: new_template.name,
         subject: new_template.subject,
@@ -34,27 +31,7 @@ pub async fn post_templates(
         updated_at: None,
     };
 
-    save_new_template(state.pool, new_temp).await.unwrap();
+    let created_template = save_new_template(state.pool, new_temp).await.unwrap();
 
-    Ok(())
-}
-
-#[derive(FromRequest)]
-#[from_request(via(axum::Json), rejection(AppError))]
-pub struct JsonExtractor<T>(pub T);
-
-impl<T> IntoResponse for JsonExtractor<T>
-    where
-        axum::Json<T>: IntoResponse,
-{
-    fn into_response(self) -> Response {
-        axum::Json(self.0).into_response()
-    }
-}
-
-#[derive(Deserialize)]
-pub struct CreateTemplate {
-    pub name: String,
-    pub subject: String,
-    pub body: String,
+    Ok(JsonExtractor(created_template))
 }
