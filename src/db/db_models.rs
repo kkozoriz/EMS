@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::{Insertable, Queryable, Selectable};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Debug)]
 #[diesel(table_name = notification_recipients)]
@@ -45,10 +45,20 @@ pub struct Notification {
     pub updated_at: Option<NaiveDateTime>,
 }
 
-#[derive(Queryable, Debug)]
-#[diesel(table_name = users)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize)]
+#[diesel(table_name = super::schema::users)]
 pub struct User {
     pub id: i32,
+    pub name: String,
+    pub email: String,
+    pub phone: Option<String>,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = super::schema::users)]
+pub struct NewUser {
     pub name: String,
     pub email: String,
     pub phone: Option<String>,
