@@ -1,7 +1,7 @@
 use crate::db::db_models::{NewUser, User};
 use crate::db::schema::users;
 use crate::errors::AppError;
-use crate::handlers::{JsonExtractor, RequestUser};
+use crate::handlers::RequestUser;
 use crate::AppState;
 use axum::extract::State;
 use axum::Json;
@@ -23,7 +23,7 @@ async fn save_new_user(
 pub async fn post_user(
     State(state): State<AppState>,
     Json(user): Json<RequestUser>,
-) -> Result<JsonExtractor<User>, AppError> {
+) -> Result<Json<User>, AppError> {
     let new_user = NewUser {
         name: user.name,
         email: user.email,
@@ -32,7 +32,7 @@ pub async fn post_user(
         updated_at: None,
     };
 
-    let created_user = save_new_user(state.pool, new_user).await.unwrap();
+    let created_user = save_new_user(state.pool, new_user).await?;
 
-    Ok(JsonExtractor(created_user))
+    Ok(Json(created_user))
 }

@@ -2,7 +2,6 @@ use axum::response::{IntoResponse, Response};
 use axum_macros::FromRequest;
 use serde::Deserialize;
 
-pub mod post_recipients;
 pub mod post_templates;
 pub mod post_users;
 

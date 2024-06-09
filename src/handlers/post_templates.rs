@@ -1,9 +1,10 @@
 use crate::db::db_models::{NewNotificationTemplate, NotificationTemplate};
 use crate::db::schema::notification_templates;
 use crate::errors::AppError;
-use crate::handlers::{JsonExtractor, RequestTemplate};
+use crate::handlers::RequestTemplate;
 use crate::AppState;
 use axum::extract::State;
+use axum::Json;
 use diesel::r2d2::{ConnectionManager, Pool};
 use diesel::{PgConnection, RunQueryDsl, SelectableHelper};
 
@@ -21,8 +22,8 @@ async fn save_new_template(
 
 pub async fn post_templates(
     State(state): State<AppState>,
-    JsonExtractor(new_template): JsonExtractor<RequestTemplate>,
-) -> Result<JsonExtractor<NotificationTemplate>, AppError> {
+    Json(new_template): Json<RequestTemplate>,
+) -> Result<Json<NotificationTemplate>, AppError> {
     let new_temp = NewNotificationTemplate {
         name: new_template.name,
         subject: new_template.subject,
@@ -31,7 +32,7 @@ pub async fn post_templates(
         updated_at: None,
     };
 
-    let created_template = save_new_template(state.pool, new_temp).await.unwrap();
+    let created_template = save_new_template(state.pool, new_temp).await?;
 
-    Ok(JsonExtractor(created_template))
+    Ok(Json(created_template))
 }
