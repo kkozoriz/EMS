@@ -1,3 +1,4 @@
+use axum::handler::Handler;
 use crate::handlers::post_templates::post_templates;
 use crate::handlers::post_users::post_user;
 use crate::AppState;
